@@ -26,6 +26,7 @@
 		"InChannels":1,
 		"OutChannels":2,
 		"ParamNames":["Pan"],
+		"ParamDefaults":[0.5],
 		"WorkspaceSize":0,
 		"Code":"r=l*sqrt(v[i]); l*=sqrt(1-v[i++]);"
 	},
