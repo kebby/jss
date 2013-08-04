@@ -1,0 +1,48 @@
+
+// Module definitions
+//
+
+[
+
+	//---------------------------------------------------------------------------
+	//   Basic modules
+	//---------------------------------------------------------------------------
+
+
+    // Sawtooth oscillator	
+	{
+		"Name":"Oscillator/Sawtooth",
+		"InChannels":0,
+		"OutChannels":1,
+		"ParamNames":["Frequency"],
+		"WorkspaceSize":1,
+		"Code":"l=v[i+1]=mod(v[i+1]+v[i],1); i+=2"
+	},
+
+
+    // Pan (mono->stereo with position)
+	{
+		"Name":"Pan",
+		"InChannels":1,
+		"OutChannels":2,
+		"ParamNames":["Pan"],
+		"WorkspaceSize":0,
+		"Code":"r=l*sqrt(v[i]); l*=sqrt(1-v[i++]);"
+	},
+
+	//---------------------------------------------------------------------------
+	//   Reserved stuff
+	//---------------------------------------------------------------------------
+
+	// Graph output node
+	{
+		"Name":"!out",
+		"InChannels":2,
+		"OutChannels":0,
+		"ParamNames":[],
+		"WorkspaceSize":0,
+		"Code":""
+	}
+	
+		
+]
