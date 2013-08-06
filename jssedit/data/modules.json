@@ -16,7 +16,7 @@
 		"OutChannels":1,
 		"ParamNames":["Frequency"],
 		"WorkspaceSize":1,
-		"Code":"l=v[i+1]=mod(v[i+1]+v[i],1); i+=2"
+		"Code":"l=v[i+1]=mod(v[i+1]+v[i],1); i+=2;"
 	},
 
 
