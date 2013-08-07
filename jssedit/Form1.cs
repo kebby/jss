@@ -12,9 +12,15 @@ namespace jssedit
 {
     public partial class Form1 : Form
     {
+
         public Form1()
         {
             InitializeComponent();
+        }
+
+        public void SetGraph(Graph g)
+        {
+            button1.SetGraph(g);
         }
     }
 }

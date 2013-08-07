@@ -18,23 +18,25 @@ namespace jssedit
         [STAThread]
         static void Main()
         {
-
             // test stuff
             var json = LoadTextWithoutComments("..\\..\\data\\modules.json");
             ModuleDefinition.LoadRegistry(json);
 
-            TestGraph();
+            var graph = TestGraph();
            
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+
+            var form = new Form1();
+            form.SetGraph(graph);
+            Application.Run(form);
         }
 
 
         /// <summary>
         /// Test the graph functions
         /// </summary>
-        static void TestGraph()
+        static Graph TestGraph()
         {
 
             // test code
@@ -47,7 +49,10 @@ namespace jssedit
 
             // add some stuff into the graph...
             var osc = graph.AddModule("Oscillator/Sawtooth");
+            osc.X = 20; osc.Y = 50;
             var pan = graph.AddModule("Pan");
+            pan.X = 120; pan.Y = 70;
+            graph.Out.X = 220; graph.Out.Y = 50;
 
             // create topology
             graph.Connect(osc, pan);
@@ -72,9 +77,12 @@ namespace jssedit
             pan = graph.AddModule("Pan");
             graph.Connect(osc, pan);
             graph.Connect(pan, graph.Out);
+            pan.X = 120; pan.Y = 30;
 
             string code = graph.GenerateCode();
             Trace.WriteLine(code);
+
+            return graph;
         }
 
 
