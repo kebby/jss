@@ -73,6 +73,8 @@ namespace jssedit
             graph.Connect(osc, pan);
             graph.Connect(pan, graph.Out);
 
+            string code = graph.GenerateCode();
+            Trace.WriteLine(code);
         }
 
 
@@ -83,20 +85,22 @@ namespace jssedit
         /// <returns>Loaded text sans comments</returns>
         static string LoadTextWithoutComments(string filename)
         {
-            var reader = new StreamReader(filename);
-            var sb = new StringBuilder();
-
-            while (!reader.EndOfStream)
+            using (var reader = new StreamReader(filename))
             {
-                var line = reader.ReadLine();
-                var cpos = line.IndexOf("//");
-                if (cpos >= 0)
-                    line = line.Substring(0, cpos);
-                if (line.Length > 0)
-                    sb.AppendLine(line);
-            }
+                var sb = new StringBuilder();
 
-            return sb.ToString();
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    var cpos = line.IndexOf("//");
+                    if (cpos >= 0)
+                        line = line.Substring(0, cpos);
+                    if (line.Length > 0)
+                        sb.AppendLine(line);
+                }
+
+                return sb.ToString();
+            }
         }
     }
 }

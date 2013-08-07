@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
+using System.Globalization;
 
 namespace jssedit
 {
@@ -243,8 +244,141 @@ namespace jssedit
             }
         }
 
+
+        public string GenerateCode()
+        {
+            var sb = new StringBuilder();
+
+            // generate topographically sorted node list
+            var nodes = new List<ModuleNode>(Modules.Count);
+            MakeNodes(Out, nodes);
+            nodes.Reverse();
+
+            // determine if output buffering is necessary (main input isn't output of preceding module)
+            ModuleNode lastNode = null;
+            foreach (var n in nodes)
+            {
+                var inp = n.Mod.Inputs[0];
+                if (inp != null && inp != lastNode.Mod)
+                    nodes.First(mn => mn.Mod == inp).OutBuffer = true;
+                lastNode = n;
+            }
+
+            // determine array positions
+            int pos = 0;
+            foreach (var n in nodes)
+            {
+                n.ArrayPos = pos;
+                n.ArrayCount = n.Mod.Definition.ParamNames.Length + n.Mod.Definition.WorkspaceSize + (n.OutBuffer ? n.Mod.Definition.OutChannels : 0);
+                pos += n.ArrayCount;
+            }
+
+            // generate float array
+            var vals = new List<string>();
+            foreach (var n in nodes)
+            {
+                var m = n.Mod;
+                for (int i = 0; i < m.Params.Length; i++)
+                    if (m.Inputs[i + 1] == null)
+                        vals.Add(String.Format(CultureInfo.InvariantCulture,"{0}", m.Params[i]));
+                    else if (nodes.IndexOf(n) > nodes.IndexOf(nodes.First(mn => mn.Mod == m.Inputs[i+1])))
+                        vals.Add("");
+                    else
+                        vals.Add("0");
+
+                for (int i=0; i < m.Definition.WorkspaceSize + (n.OutBuffer ? m.Definition.OutChannels : 0); i++)
+                    vals.Add("0");
+            }
+
+            // shorten float numbers
+            for (int i = 0; i < vals.Count; i++)
+            {
+                if (!String.IsNullOrEmpty(vals[i]))
+                {
+                    var pt = vals[i].IndexOf('.');
+                    if (pt >= 0 && vals[i].Substring(0, pt) == "0")
+                        vals[i] = vals[i].Substring(pt);
+                    //  if(!vals[i].Contains('.'))
+                    //      vals[i] += '.';
+                }
+            }
+
+            sb.AppendFormat("var v=[{0}];\n\n", String.Join(",", vals));
+
+            // write code
+            lastNode = null;
+            sb.AppendFormat("var l,r,i=0;\n");
+            foreach (var n in nodes)
+            {
+                var m = n.Mod;
+                sb.AppendFormat("\n// {0}\n",m.Name);
+
+                // input wiring if necessary
+                var inp = m.Inputs[0];
+                if (inp != null && inp != lastNode.Mod)
+                {
+                    var inode = nodes.First(mn => mn.Mod == inp);
+                    var offs = (inode.ArrayPos + inode.ArrayCount - inode.Mod.Definition.OutChannels)-n.ArrayPos;
+                    sb.AppendFormat("l=v[i+{0}];\n", offs);
+                    if (m.Definition.InChannels==2)
+                        sb.AppendFormat("r=v[i+{0}];\n", offs+1);
+                }
+
+                // execute code
+                sb.AppendFormat("{0}\n", m.Definition.Code);
+
+                // output buffer?
+                if (n.OutBuffer)
+                {
+                    if (m.Definition.OutChannels >= 1) sb.AppendFormat("v[i++]=l;\n");
+                    if (m.Definition.OutChannels >= 2) sb.AppendFormat("v[i++]=r;\n");
+                }
+
+                // distribute to dependent parameters
+                foreach (var n2 in nodes)
+                {
+                    var m2 = n2.Mod;
+                    for (int i2 = 1; i2 < m2.Inputs.Count(); i2++)
+                    {
+                        if (m2.Inputs[i2] == m)
+                        {
+                            var offs = (n2.ArrayPos + i2 - 1)-(n.ArrayPos+n.ArrayCount);
+                            sb.AppendFormat("v[i+{0}]=l;\n", offs);
+                        }
+                    }
+                }
+              
+                lastNode = n;
+            }
+
+
+            return sb.ToString();
+        }
+
+
         // for debugging
         public override string ToString() { return Name + " (" + Modules.Count + ")"; }
+
+        private class ModuleNode
+        {
+            public Module Mod;
+            public int ArrayPos;
+            public int ArrayCount;
+            public bool OutBuffer;
+            //public int[] Outputs;
+        }
+
+        private void MakeNodes(Module mod, IList<ModuleNode> list)
+        {
+            list.Add(new ModuleNode { Mod = mod });
+
+            if (mod.Definition.InChannels > 0 && mod.Inputs[0] == null)
+                throw new ModelException("Input of {0} is unused", mod.Name);
+
+            foreach (var imod in mod.Inputs.Where(m => m != null))
+                if (!list.Any(mn => mn.Mod == imod))
+                    MakeNodes(imod, list);
+        }
     }
 
 
