@@ -149,11 +149,11 @@ namespace jssedit
             public Point[] Points;
             public Pen Pen;
 
-            void Layout(Point a, Point b, int top, int bottom)
+            void Layout(Point a, Point b, int topa, int bottoma, int topb, int bottomb)
             {
                 Point[] p;
 
-                if (b.X > a.X || (top>=bottom))
+                if (b.X > a.X || (topa>=bottoma))
                 {
                     p = new Point[4];
                     p[0] = a; p[3] = b;
@@ -170,28 +170,34 @@ namespace jssedit
                     p = new Point[6];
                     p[0] = a; p[5] = b;
 
-                    p[1].X = p[0].X + 20;
+                    p[1].X = p[0].X + 10;
                     p[1].Y = p[0].Y;
 
-                    top -= 20;
-                    bottom += 20;
+                    topa -= 10;
+                    bottoma += 10;
 
-                    var tw = Math.Abs(a.Y - top) + Math.Abs(top - b.Y);
-                    var bw = Math.Abs(bottom - a.Y) + Math.Abs(bottom - b.Y);
+                    var tw = Math.Abs(a.Y - topa) + Math.Abs(topa - b.Y);
+                    var bw = Math.Abs(bottoma - a.Y) + Math.Abs(bottoma - b.Y);
 
                     p[2].X = p[1].X;
                     if (tw < bw)
-                        p[2].Y = top;
+                        p[2].Y = topa;
                     else
-                        p[2].Y = bottom;
+                        p[2].Y = bottoma;
 
                     p[3].Y = p[2].Y;
-                    p[3].X = b.X - 50;
+                    if (bottomb > topb)
+                    {
+                        if (p[3].Y > p[5].Y)
+                            p[3].X = b.X - (bottomb - p[5].Y) - 10;
+                        else
+                            p[3].X = b.X - (p[5].Y - topb) - 10;
+                    }
+                    else
+                        p[3].X = b.X - 10;
 
                     p[4].X = p[3].X;
                     p[4].Y = p[5].Y;
-
-
                 }
                
                 Points = p;
@@ -206,10 +212,28 @@ namespace jssedit
                 var pa = new Point(Src.HitRect.Right,Src.HitRect.Top + IOPinY);
                 var pb = new Point(Dest.HitRect.Left,(index>0)?(Dest.HitRect.Top + ParamY + ParamPinY + ParamH * (Index - 1)):(Dest.HitRect.Top + IOPinY));
 
-                Layout(pa, pb, Src.HitRect.Top, Src.HitRect.Bottom);
+                Layout(pa, pb, Src.HitRect.Top, Src.HitRect.Bottom, Dest.HitRect.Top, Dest.HitRect.Bottom);
                 Pen = Src.Mod.Definition.OutChannels > 1 ? c.CableStereo : c.CableMono;
                 HitRect = RectFromPoints(Points, 2);
             }
+
+            public TCable(TModule src, Point b, GraphControl c)
+            {
+                Src = src;
+                var pa = new Point(Src.HitRect.Right, Src.HitRect.Top + IOPinY);
+                Layout(pa, b, Src.HitRect.Top, Src.HitRect.Bottom, 0, 0);
+                HitRect = RectFromPoints(Points, 2);
+            }
+
+            public TCable(Point a, TModule dest, int index, GraphControl c)
+            {
+                Dest = dest;
+                Index = index;
+                var pb = new Point(Dest.HitRect.Left, (index > 0) ? (Dest.HitRect.Top + ParamY + ParamPinY + ParamH * (Index - 1)) : (Dest.HitRect.Top + IOPinY));
+                Layout(a, pb, 0, 0, Dest.HitRect.Top, Dest.HitRect.Bottom);
+                HitRect = RectFromPoints(Points, 2);
+            }
+
         }
 
 
@@ -248,6 +272,9 @@ namespace jssedit
 
             foreach (var thing in Things.OrderBy(t => t.Priority + (t == Selected ? 100 : 0)))
                 thing.Paint(g, this, thing==Hovered, thing==Selected);
+
+            if (DragCable != null)
+                DragCable.Paint(g, this, true, true);
         }
 
         protected override void OnMouseLeave(EventArgs e)
@@ -267,10 +294,24 @@ namespace jssedit
                     {
                         var tmod = Selected as TModule;
 
-                        tmod.Mod.X = e.X - DragOffset.X;
-                        tmod.Mod.Y = e.Y - DragOffset.Y;
+                        tmod.Mod.X = Math.Max(0, e.X - DragOffset.X);
+                        tmod.Mod.Y = Math.Max(0, e.Y - DragOffset.Y);
 
                         Dirty = true;
+                        Invalidate();
+                    }
+                    break;
+                case DragOp.CableFrom:
+                    {
+                        var tpin = Selected as TPin;
+                        DragCable = new TCable(tpin.Module, e.Location, this);
+                        Invalidate();
+                    }
+                    break;
+                case DragOp.CableTo:
+                    {
+                        var tpin = Selected as TPin;
+                        DragCable = new TCable(e.Location, tpin.Module, tpin.Index, this);
                         Invalidate();
                     }
                     break;
@@ -291,12 +332,110 @@ namespace jssedit
                 DragOffset.X = e.X - tmod.Mod.X;
                 DragOffset.Y = e.Y - tmod.Mod.Y;
             }
+            else if (Selected is TPin)
+            {
+                var tpin = (Selected as TPin);
+                if (tpin.IsOutput)
+                    Drag = DragOp.CableFrom;
+                else if (tpin.Module.Mod.Inputs[tpin.Index] == null)
+                    Drag = DragOp.CableTo;
+            }
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
+
+            switch (Drag)
+            {
+                case DragOp.CableFrom:
+                    {
+                        var src = Selected as TPin;
+                        var dest = Hovered as TPin;
+                        if (dest != null && !dest.IsOutput && dest.Module.Mod.Inputs[dest.Index] == null)
+                        {
+                            try
+                            {
+                                MyGraph.Connect(src.Module.Mod, dest.Module.Mod,
+                                    (dest.Index > 0 ? dest.Module.Mod.Definition.ParamNames[dest.Index - 1] : null));
+                            }
+                            catch (ModelException me)
+                            {
+                                MessageBox.Show(me.Message);
+                            }
+                            Dirty = true;
+                        }
+                        DragCable = null;
+                        Invalidate();                    
+                    }
+                    break;
+                case DragOp.CableTo:
+                    {
+                        var src = Hovered as TPin;
+                        var dest = Selected as TPin;
+                        if (src != null && src.IsOutput)
+                        {
+                            try
+                            {
+                                MyGraph.Connect(src.Module.Mod, dest.Module.Mod,
+                                    (dest.Index > 0 ? dest.Module.Mod.Definition.ParamNames[dest.Index - 1] : null));
+                            }
+                            catch (ModelException me)
+                            {
+                                MessageBox.Show(me.Message);
+                            }
+                            Dirty = true;
+                        }
+                        DragCable = null;
+                        Invalidate();                    
+                    }
+                    break;
+            }
             Drag = DragOp.None;
+
+        }
+
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+
+            if (e.KeyCode == Keys.Delete)
+                Delete();
+        }
+
+
+        void Delete()
+        {
+            if (Selected is TCable)
+            {
+                var tcable = Selected as TCable;
+                try
+                {
+                    MyGraph.Disconnect(tcable.Dest.Mod,
+                                       (tcable.Index > 0 ? tcable.Dest.Mod.Definition.ParamNames[tcable.Index - 1] : null));
+                }
+                catch (ModelException me)
+                {
+                    MessageBox.Show(me.Message);
+                }
+                Dirty = true;
+                Invalidate();
+            }
+            else if (Selected is TModule)
+            {
+                var tmod = Selected as TModule;
+                try
+                {
+                    MyGraph.RemoveModule(tmod.Mod);
+                }
+                catch (ModelException me)
+                {
+                    MessageBox.Show(me.Message);
+                }
+                Dirty = true;
+                Invalidate();
+            }
         }
 
 
@@ -421,6 +560,7 @@ namespace jssedit
         IThing Selected;
         DragOp Drag;
         Point DragOffset;
+        TCable DragCable;
 
         Font ModHeadFnt = new Font(FontFamily.GenericSansSerif, 8);
         Font ModParamFnt = new Font(FontFamily.GenericSansSerif, 7);
