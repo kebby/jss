@@ -325,21 +325,40 @@ namespace jssedit
             base.OnMouseDown(e);
             SetSelected(Hit(e.Location));
 
-            if (Selected is TModule)
+            if (e.Button == MouseButtons.Left)
             {
-                var tmod = (Selected as TModule);
-                Drag = DragOp.Module;
-                DragOffset.X = e.X - tmod.Mod.X;
-                DragOffset.Y = e.Y - tmod.Mod.Y;
+                if (Selected is TModule)
+                {
+                    var tmod = (Selected as TModule);
+                    Drag = DragOp.Module;
+                    DragOffset.X = e.X - tmod.Mod.X;
+                    DragOffset.Y = e.Y - tmod.Mod.Y;
+                }
+                else if (Selected is TPin)
+                {
+                    var tpin = (Selected as TPin);
+                    if (tpin.IsOutput)
+                        Drag = DragOp.CableFrom;
+                    else if (tpin.Module.Mod.Inputs[tpin.Index] == null)
+                        Drag = DragOp.CableTo;
+                }
             }
-            else if (Selected is TPin)
+            else if (e.Button == MouseButtons.Right)
             {
-                var tpin = (Selected as TPin);
-                if (tpin.IsOutput)
-                    Drag = DragOp.CableFrom;
-                else if (tpin.Module.Mod.Inputs[tpin.Index] == null)
-                    Drag = DragOp.CableTo;
+                if (Selected is TModule || Selected is TCable)
+                {
+                    var item = new MenuItem("Delete", (o, ev) => Delete());
+                    var menu = new ContextMenu(new[] { item });
+                    menu.Show(this, e.Location);
+                }
+                else if (Selected == null)
+                {
+                    var items = GetModuleMenuItems("", n => AddModule(n, e.Location));
+                    var menu = new ContextMenu(items);
+                    menu.Show(this, e.Location);
+                }
             }
+           
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
@@ -438,6 +457,21 @@ namespace jssedit
             }
         }
 
+        void AddModule(string name, Point pos)
+        {
+            try
+            {
+                var mod = MyGraph.AddModule(name);
+                mod.X = pos.X;
+                mod.Y = pos.Y;
+            }
+            catch (ModelException me)
+            {
+                MessageBox.Show(me.Message);
+            }
+            Dirty = true;
+            Invalidate();
+        }
 
         void DoLayout(Graphics g)
         {
@@ -545,6 +579,33 @@ namespace jssedit
             return (int)Math.Round(d);
         }
 
+
+        MenuItem[] GetModuleMenuItems(string prefix, Action<string> action)
+        {
+            var names = ModuleDefinition.Registry.Keys.Where(n => !n.StartsWith("!")).ToList();
+
+            var menuitems = new List<MenuItem>();
+            var submenus = new Dictionary<string, MenuItem[]>();
+
+            if (prefix != "")
+                names = names.Where(n => n.StartsWith(prefix)).Select(n => n.Substring(prefix.Length)).ToList();
+
+            foreach (var name in names)
+            {
+                var slpos = name.IndexOf('/');
+                if (slpos >= 0)
+                    submenus[name.Substring(0, slpos)] = GetModuleMenuItems(prefix + name.Substring(0, slpos + 1), action);
+                else
+                    menuitems.Add(new MenuItem(name, (o, e) => action(prefix + name)));
+            }
+
+            menuitems.Sort((a, b) => String.Compare(a.Text, b.Text));
+
+            if (submenus.Count > 0) menuitems.Insert(0, new MenuItem("-"));
+            menuitems.InsertRange(0, submenus.OrderBy(s => s.Key).Select(s => new MenuItem(s.Key, s.Value)));
+
+            return menuitems.ToArray();
+        }
 
         enum DragOp
         {

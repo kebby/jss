@@ -8,7 +8,6 @@
 	//   Basic modules
 	//---------------------------------------------------------------------------
 
-
     // Sawtooth oscillator	
 	{
 		"Name":"Oscillator/Sawtooth",
@@ -19,6 +18,71 @@
 		"Code":"l=v[i+1]=mod(v[i+1]+v[i],1); i+=2;"
 	},
 
+    // Sine oscillator	
+	{
+		"Name":"Oscillator/Sine",
+		"InChannels":0,
+		"OutChannels":1,
+		"ParamNames":["Frequency"],
+		"WorkspaceSize":1,
+		"Code":"l=v[i+1]=mod(v[i+1]+v[i],1); i+=2;"
+	},
+
+	// Sawtooth oscillator	
+	{
+		"Name":"Oscillator/Special/Sawtooth2",
+		"InChannels":0,
+		"OutChannels":1,
+		"ParamNames":["Frequency"],
+		"WorkspaceSize":1,
+		"Code":"l=v[i+1]=mod(v[i+1]+v[i],1); i+=2;"
+	},
+
+	{
+		"Name":"Filter/Lowpass",
+		"InChannels":1,
+		"OutChannels":1,
+		"ParamNames":["Cutoff", "Resonance"],
+		"WorkspaceSize":1,
+		"Code":"l=v[i+1]=mod(v[i+1]+v[i],1); i+=2;"
+	},
+
+
+	{
+		"Name":"Special/Stereo->L",
+		"InChannels":2,
+		"OutChannels":1,
+		"ParamNames":[],
+		"WorkspaceSize":0,
+		"Code":""
+	},
+
+	{
+		"Name":"Special/Stereo->R",
+		"InChannels":2,
+		"OutChannels":1,
+		"ParamNames":[],
+		"WorkspaceSize":0,
+		"Code":"l=r;"
+	},
+
+	{
+		"Name":"Special/Stereo->Mono",
+		"InChannels":2,
+		"OutChannels":1,
+		"ParamNames":[],
+		"WorkspaceSize":0,
+		"Code":"l+=r;"
+	},
+
+	{	
+		"Name":"Special/Mono->Stereo",
+		"InChannels":1,
+		"OutChannels":2,
+		"ParamNames":[],
+		"WorkspaceSize":0,
+		"Code":"r=l;"
+	},
 
     // Pan (mono->stereo with position)
 	{
@@ -31,6 +95,32 @@
 		"Code":"r=l*sqrt(v[i]); l*=sqrt(1-v[i++]);"
 	},
 
+	{	
+		"Name":"Mul Mono",
+		"InChannels":1,
+		"OutChannels":1,
+		"ParamNames":["Factor"],
+		"WorkspaceSize":0,
+		"Code":"l*=v[i++];"
+	},
+
+	{	
+		"Name":"Mul Stereo",
+		"InChannels":2,
+		"OutChannels":2,
+		"ParamNames":["Factor"],
+		"WorkspaceSize":0,
+		"Code":"l*=v[i]; r*=v[i++];"
+	},
+
+	{	
+		"Name":"Add Mono",
+		"InChannels":1,
+		"OutChannels":1,
+		"ParamNames":["Adder"],
+		"WorkspaceSize":0,
+		"Code":"l+=v[i++];"
+	},
 	//---------------------------------------------------------------------------
 	//   Reserved stuff
 	//---------------------------------------------------------------------------
