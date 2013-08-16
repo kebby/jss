@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using System.Globalization;
 
 namespace jssedit
 {
@@ -106,6 +107,60 @@ namespace jssedit
 
         }
 
+        private void listView1_SelectedIndexChanged(object sender, EventArgs e)
+        {
 
+        }
+
+        internal void SetEditModule(Module mod)
+        {
+            if (mod == null)
+            {
+                objectListView1.SetObjects(null);
+                return;
+            }
+
+            objectListView1.SetObjects(Enumerable.Range(0, mod.Params.Length).Select(i => new ParamEditProxy(mod, i)));
+        }
+
+        class ParamEditProxy
+        {
+            public string Name 
+            {
+                get
+                {
+                    return Mod.Definition.ParamNames[Index];
+                }
+            }
+
+            public string Value
+            {
+                get
+                {
+                    return String.Format(CultureInfo.InvariantCulture, "{0}", Mod.Params[Index]);
+                }
+                set
+                {
+                    float result;
+                    if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out result))
+                        Mod.Params[Index] = result;
+                }
+            }
+
+
+            public ParamEditProxy(Module mod, int index)
+            {
+                Mod = mod;
+                Index = index;
+            }
+
+            Module Mod;
+            int Index;
+        }
+
+        private void objectListView1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }

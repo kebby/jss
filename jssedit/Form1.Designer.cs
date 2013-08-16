@@ -37,11 +37,12 @@
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.generateCodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitter1 = new System.Windows.Forms.Splitter();
-            this.listView1 = new System.Windows.Forms.ListView();
+            this.objectListView1 = new BrightIdeasSoftware.ObjectListView();
+            this.param = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+            this.value = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
             this.button1 = new jssedit.GraphControl();
-            this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.menuStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.objectListView1)).BeginInit();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -113,27 +114,52 @@
             // 
             // splitter1
             // 
-            this.splitter1.Location = new System.Drawing.Point(754, 24);
+            this.splitter1.Location = new System.Drawing.Point(653, 24);
             this.splitter1.Name = "splitter1";
             this.splitter1.Size = new System.Drawing.Size(6, 455);
             this.splitter1.TabIndex = 2;
             this.splitter1.TabStop = false;
             this.splitter1.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitter1_SplitterMoved);
             // 
-            // listView1
+            // objectListView1
             // 
-            this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader1,
-            this.columnHeader2});
-            this.listView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.listView1.FullRowSelect = true;
-            this.listView1.GridLines = true;
-            this.listView1.Location = new System.Drawing.Point(760, 24);
-            this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(173, 455);
-            this.listView1.TabIndex = 3;
-            this.listView1.UseCompatibleStateImageBehavior = false;
-            this.listView1.View = System.Windows.Forms.View.Details;
+            this.objectListView1.AllColumns.Add(this.param);
+            this.objectListView1.AllColumns.Add(this.value);
+            this.objectListView1.AlternateRowBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.objectListView1.CellEditActivation = BrightIdeasSoftware.ObjectListView.CellEditActivateMode.SingleClick;
+            this.objectListView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.param,
+            this.value});
+            this.objectListView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.objectListView1.GridLines = true;
+            this.objectListView1.Location = new System.Drawing.Point(659, 24);
+            this.objectListView1.Name = "objectListView1";
+            this.objectListView1.ShowGroups = false;
+            this.objectListView1.Size = new System.Drawing.Size(274, 455);
+            this.objectListView1.TabIndex = 3;
+            this.objectListView1.UseAlternatingBackColors = true;
+            this.objectListView1.UseCompatibleStateImageBehavior = false;
+            this.objectListView1.View = System.Windows.Forms.View.Details;
+            this.objectListView1.SelectedIndexChanged += new System.EventHandler(this.objectListView1_SelectedIndexChanged);
+            // 
+            // param
+            // 
+            this.param.AspectName = "Name";
+            this.param.CellPadding = null;
+            this.param.IsEditable = false;
+            this.param.Text = "Parameter";
+            this.param.Width = 100;
+            // 
+            // value
+            // 
+            this.value.AspectName = "Value";
+            this.value.CellPadding = null;
+            this.value.FillsFreeSpace = true;
+            this.value.Groupable = false;
+            this.value.MinimumWidth = 60;
+            this.value.Searchable = false;
+            this.value.Sortable = false;
+            this.value.Text = "Value";
             // 
             // button1
             // 
@@ -141,25 +167,16 @@
             this.button1.Dock = System.Windows.Forms.DockStyle.Left;
             this.button1.Location = new System.Drawing.Point(0, 24);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(754, 455);
+            this.button1.Size = new System.Drawing.Size(653, 455);
             this.button1.TabIndex = 0;
             this.button1.Text = "button1";
-            // 
-            // columnHeader1
-            // 
-            this.columnHeader1.Text = "Parameter";
-            this.columnHeader1.Width = 100;
-            // 
-            // columnHeader2
-            // 
-            this.columnHeader2.Text = "Value";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(933, 479);
-            this.Controls.Add(this.listView1);
+            this.Controls.Add(this.objectListView1);
             this.Controls.Add(this.splitter1);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.menuStrip1);
@@ -169,6 +186,7 @@
             this.Load += new System.EventHandler(this.Form1_Load);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.objectListView1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -186,9 +204,9 @@
         private System.Windows.Forms.ToolStripMenuItem saveAsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem generateCodeToolStripMenuItem;
         private System.Windows.Forms.Splitter splitter1;
-        private System.Windows.Forms.ListView listView1;
-        private System.Windows.Forms.ColumnHeader columnHeader1;
-        private System.Windows.Forms.ColumnHeader columnHeader2;
+        private BrightIdeasSoftware.ObjectListView objectListView1;
+        private BrightIdeasSoftware.OLVColumn param;
+        private BrightIdeasSoftware.OLVColumn value;
     }
 }
 

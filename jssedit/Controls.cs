@@ -334,12 +334,14 @@ namespace jssedit
 
             if (e.Button == MouseButtons.Left)
             {
+                (Parent as Form1).SetEditModule(null);
                 if (Selected is TModule)
                 {
                     var tmod = (Selected as TModule);
                     Drag = DragOp.Module;
                     DragOffset.X = e.X - tmod.Mod.X;
                     DragOffset.Y = e.Y - tmod.Mod.Y;
+                    (Parent as Form1).SetEditModule(tmod.Mod);
                 }
                 else if (Selected is TPin)
                 {
