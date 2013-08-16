@@ -5,12 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Globalization;
+using System.Runtime.Serialization;
 
 namespace jssedit
 {
     /// <summary>
     /// Definition for a synth module
     /// </summary>
+    [Serializable]
     public class ModuleDefinition
     {
         /// <summary>
@@ -72,12 +74,19 @@ namespace jssedit
     /// <summary>
     /// Instance of a synth module
     /// </summary>
+    [Serializable]
     public class Module
     {
         /// <summary>
+        /// Name of module definition
+        /// </summary>
+        public string DefinitionName;
+
+        /// <summary>
         /// Reference to module definition
         /// </summary>
-        public readonly ModuleDefinition Definition;
+        [NonSerialized]
+        public ModuleDefinition Definition;
 
         /// <summary>
         /// Input links (first one is always input (even if there's no actual input), entries 1.. are params)
@@ -105,6 +114,7 @@ namespace jssedit
         /// <param name="def">module definition</param>
         public Module(ModuleDefinition def)
         {
+            DefinitionName = def.Name;
             Definition = def;
 
             Params = new float[def.ParamNames.Length];
@@ -116,6 +126,14 @@ namespace jssedit
             Name = def.Name.Substring(def.Name.LastIndexOf('/')+1);
         }
 
+
+        [OnDeserialized]
+        internal void OnDeserialisation(StreamingContext context)
+        {
+            Definition = ModuleDefinition.Registry[DefinitionName];
+        }
+
+
         // for debugging
         public override string ToString() { return Name + ": " + Definition; }
     }
@@ -123,6 +141,7 @@ namespace jssedit
     /// <summary>
     /// Module instance graph
     /// </summary>
+    [Serializable]
     public class Graph
     {
         /// <summary>
@@ -175,7 +194,7 @@ namespace jssedit
         /// <param name="module">module to remove</param>
         public void RemoveModule(Module module)
         {
-            if (!Modules.Contains(module)) throw new ModelException("Module not in graph");
+            if (!Modules.Remove(module)) throw new ModelException("Module not in graph");
 
             // disconnect from everything
             foreach (var m in Modules)
@@ -187,8 +206,6 @@ namespace jssedit
 
             // ... and before anyone does anything funny...
             Array.Clear(module.Inputs, 0, module.Inputs.Length);
-
-            Modules.Remove(module);
         }
 
 

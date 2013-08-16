@@ -240,8 +240,15 @@ namespace jssedit
         public void SetGraph(Graph gr)
         {
             MyGraph = gr;
+            Dirty = true;
             Invalidate();
         }
+
+        public Graph GetGraph()
+        {
+            return MyGraph;
+        }
+
 
         protected override void Dispose(bool disposing)
         {

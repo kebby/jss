@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Text;
+using System.Resources;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace jssedit
 {
@@ -81,6 +84,22 @@ namespace jssedit
 
             string code = graph.GenerateCode();
             Trace.WriteLine(code);
+
+            // save test
+            using (var file = new FileStream("c:\\test\\bla.dat",FileMode.Create))
+            {
+                var formatter = new BinaryFormatter();
+                formatter.Serialize(file, graph);
+            }
+
+            // load test
+            using (var file = new FileStream("c:\\test\\bla.dat", FileMode.Open))
+            {     
+                var formatter = new BinaryFormatter();
+                var graph2 = formatter.Deserialize(file) as Graph;
+                graph2.Modules[1].Name = "lol";
+            }
+          
 
             return graph;
         }
