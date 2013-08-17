@@ -35,7 +35,7 @@
             this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.generateCodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.testMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitter1 = new System.Windows.Forms.Splitter();
             this.objectListView1 = new BrightIdeasSoftware.ObjectListView();
             this.param = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
@@ -101,16 +101,17 @@
             // toolsToolStripMenuItem
             // 
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.generateCodeToolStripMenuItem});
+            this.testMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
             // 
-            // generateCodeToolStripMenuItem
+            // testMenuItem
             // 
-            this.generateCodeToolStripMenuItem.Name = "generateCodeToolStripMenuItem";
-            this.generateCodeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.generateCodeToolStripMenuItem.Text = "Generate Code";
+            this.testMenuItem.Name = "testMenuItem";
+            this.testMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.testMenuItem.Text = "Test!";
+            this.testMenuItem.Click += new System.EventHandler(this.generateCodeToolStripMenuItem_Click);
             // 
             // splitter1
             // 
@@ -202,7 +203,7 @@
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveAsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem generateCodeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem testMenuItem;
         private System.Windows.Forms.Splitter splitter1;
         private BrightIdeasSoftware.ObjectListView objectListView1;
         private BrightIdeasSoftware.OLVColumn param;

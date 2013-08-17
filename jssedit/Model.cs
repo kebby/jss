@@ -262,7 +262,7 @@ namespace jssedit
         }
 
 
-        public string GenerateCode()
+        public void GenerateCode(out string values, out string code)
         {
             var sb = new StringBuilder();
 
@@ -320,15 +320,14 @@ namespace jssedit
                 }
             }
 
-            sb.AppendFormat("var v=[{0}];\n\n", String.Join(",", vals));
+            values = String.Format("[{0}]", String.Join(",", vals));
 
             // write code
             lastNode = null;
-            sb.AppendFormat("var l,r,i=0;\n");
             foreach (var n in nodes)
             {
                 var m = n.Mod;
-                sb.AppendFormat("\n// {0}\n",m.Name);
+                //sb.AppendFormat("\n// {0}\n",m.Name);
 
                 // input wiring if necessary
                 var inp = m.Inputs[0];
@@ -368,10 +367,35 @@ namespace jssedit
                 lastNode = n;
             }
 
-
-            return sb.ToString();
+            code = sb.ToString();
         }
 
+        public static string GenerateAllCode(IList<Graph> graphs)
+        {
+            string synth = Properties.Resources.Synth;
+
+            var values = new StringBuilder();
+            var code = new StringBuilder();
+
+            for (int i = 0; i < graphs.Count; i++)
+            {
+                string v, c;
+                graphs[i].GenerateCode(out v, out c);
+
+                if (i > 0) values.Append(",");
+                values.Append(v);
+
+                if (i > 0) code.Append("c++; ");
+                code.AppendFormat("v=state[c]; i=0; ");
+                code.Append(c);
+                code.Append("ll+=l; rr+=r; ");
+            }
+
+            synth = synth.Replace("//!VALUES", values.ToString());
+            synth = synth.Replace("//!CODE", code.ToString());
+
+            return synth;
+        }
 
         // for debugging
         public override string ToString() { return Name + " (" + Modules.Count + ")"; }

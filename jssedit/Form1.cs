@@ -162,5 +162,14 @@ namespace jssedit
         {
 
         }
+
+        private void generateCodeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string code = Graph.GenerateAllCode(new[] { button1.GetGraph() });
+            //Trace.WriteLine(code);
+
+            Program.Preview.SetCode(code);
+            Program.Preview.Play();
+        }
     }
 }
